@@ -71,7 +71,6 @@ class MPPI:
     @staticmethod
     @jax.jit
     def simulate_trajectory(x0, u_seq, noise, g, m, l, dt, max_speed):
-        """Simulate trajectories given initial state, control sequence, and noise."""
         def step(x, u_noise):
             u = u_noise
             theta, theta_dot = x
@@ -90,20 +89,30 @@ class MPPI:
     def compute_costs(trajectories, stage_cost_weight, terminal_cost_weight):
         """Compute stage and terminal costs for all trajectories."""
         theta, theta_dot = trajectories[..., 0], trajectories[..., 1]
-        stage_costs = stage_cost_weight[0] * theta**2 + stage_cost_weight[1] * theta_dot**2
         terminal_costs = terminal_cost_weight[0] * theta[-1]**2 + terminal_cost_weight[1] * theta_dot[-1]**2
-        total_costs = jnp.sum(stage_costs, axis=1) + terminal_costs
+
+
+        stage_costs = stage_cost_weight[0] * theta**2 + stage_cost_weight[1] * theta_dot**2
+
+        # Ensure stage_costs is 2D
+        if stage_costs.ndim == 1:
+            stage_costs = stage_costs[:, None]
+
+        total_costs = jnp.sum(stage_costs, axis=0) + terminal_costs
+
         return total_costs
 
 
-    @jax.jit
+    # Remove the @jax.jit decorator
     def compute_weights(self, costs):
         """Compute weights for sampled trajectories."""
         min_cost = jnp.min(costs)
         weights = jnp.exp(-1.0 / self.lambda_param * (costs - min_cost))
         return weights / jnp.sum(weights)
 
-    @jax.jit
+
+
+    
     def update_control(self, u_prev, weights, noise):
         """Update the control sequence using weighted noise."""
         weighted_noise = jnp.sum(weights[:, None] * noise, axis=0)
@@ -121,6 +130,7 @@ class MPPI:
         simulate_vmap = jax.vmap(self.simulate_trajectory, in_axes=(None, 0, 0, None, None, None, None, None))
         trajectories = simulate_vmap(x0, u_seq, noise, self.g, self.m, self.l, self.dt, self.max_speed)
 
+
         # Compute costs and weights
         costs = self.compute_costs(trajectories, self.stage_cost_weight, self.terminal_cost_weight)
         weights = self.compute_weights(costs)
@@ -132,5 +142,6 @@ class MPPI:
         self.u_prev = jnp.concatenate((u[1:], u[-1:]))  # Shift and hold last control
 
         # Return the first control input to apply
-        return u[0], u
+        return u[0], u, trajectories, jnp.min(costs)
+
 
