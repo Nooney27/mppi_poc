@@ -84,6 +84,7 @@ pendulum.save_animation(filename="pendulum_jax.gif", interval=delta_t*1000, movi
 
 
 # Plot MPPI Sampled Trajectories
+'''
 plt.figure(figsize=(10, 6))
 for k, traj_set in enumerate(sampled_trajectories[::10]):  # Plot every 10th step
     for traj in traj_set:
@@ -92,9 +93,13 @@ plt.title("MPPI Sampled Trajectories")
 plt.xlabel("Time Step")
 plt.ylabel("Theta (rad)")
 plt.show()
+'''
 
-frequencies = [1 / rt for rt in runtime_list]
-print(f"Average Frequency: {np.mean(frequencies):.2f} Hz")
+frequencies = [1 / rt for rt in runtime_list if rt != 0]
+if frequencies:
+    print(f"Average Frequency: {np.mean(frequencies):.2f} Hz")
+else:
+    print("No valid runtime data to calculate frequency.")
 
 
 plt.figure(figsize=(14, 8))
