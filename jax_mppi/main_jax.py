@@ -1,8 +1,11 @@
 import numpy as np
-from environment import Pendulum
-from mppi import MPPI
+from environment_jax import Pendulum
+from mppi_jax import MPPI
 import matplotlib.pyplot as plt
 import time
+import jax
+import jax.numpy as jnp
+#print("JAX is installed. Backend:", jax.devices()[0])
 
 
 # Settings:
@@ -42,9 +45,7 @@ mppi = MPPI(
     max_speed = 8.0,
     horizon = 20,
     num_samples= 1500,
-    param_exploration = 0.15,
     param_lambda = 0.5,
-    param_alpha = 0.8,
     sigma = 1.0,
     stage_cost_weight    = np.array([1.0, 0.1]), # weight for [theta, theta_dot]
     terminal_cost_weight = 10.0 * np.array([1.0, 0.5]), # weight for [theta, theta_dot]
@@ -78,8 +79,8 @@ for i in range(sim_steps):
 
 
 
-pendulum.save_animation(filename="pendulum_animation.mp4", interval=delta_t*1000, movie_writer="ffmpeg")
-pendulum.save_animation(filename="pendulum_animation.gif", interval=delta_t*1000, movie_writer="pillow")
+pendulum.save_animation(filename="pendulum_jax.mp4", interval=delta_t*1000, movie_writer="ffmpeg")
+pendulum.save_animation(filename="pendulum_jax.gif", interval=delta_t*1000, movie_writer="pillow")
 
 
 # Plot MPPI Sampled Trajectories
